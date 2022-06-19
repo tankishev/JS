@@ -1,15 +1,10 @@
 function factory(library, orders){
-    const products = [];
-    for (const order of orders){
-        const product = order.template;
-        for (const part of order.parts){
-            product[part] = library[part];
-        }
-        products.push(product);
-    }
-    return products;
+  return orders.map((order) => {
+    const product = Object.assign({}, order.template);
+    order.parts.forEach((part) => product[part] = library[part]);
+    return product;
+  });
 }
-
 
 const library = {
     print: function () {
@@ -43,3 +38,4 @@ const library = {
   const products = factory(library, orders);
   console.log(products);
   
+  const a=5;

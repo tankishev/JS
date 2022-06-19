@@ -1,16 +1,16 @@
 {
     "eslint.options": {
-        "envs": [
-            "es6",
-            "browser",
-            "node",
-            "mocha"
-        ],
-        "globals": [
-            "expect"
-        ],
+        "envs": {
+            "es6": true,
+            "browser": true,
+            "node": true,
+            "mocha": true
+        },
+        "globals": {
+            "expect": true
+        },
         "parserOptions": {
-            "ecmaVersion": 2019,
+            "ecmaVersion": 11,
             "sourceType": "module",
             "ecmaFeatures": {
                 "jsx": true
