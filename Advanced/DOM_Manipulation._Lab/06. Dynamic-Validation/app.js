@@ -1,13 +1,13 @@
 function validate() {
-    const pattern = /[a-z]+@[a-z]+\.[a-z]+]/
-    let input = document.getElementById(input);
+    const input = document.getElementById('email');
     input.addEventListener('change', validateEmail);    
     
     function validateEmail(){
+        const pattern = /[a-z]+@[a-z]+\.[a-z]+/
         if (input.value.match(pattern)){
-            console.log('ok');
+            input.classList.remove('error');
         } else {
-            console.log('notok')
+            input.classList.add('error');
         }
     }
 }
