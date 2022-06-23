@@ -1,15 +1,14 @@
 function lockedProfile() {
 
     const buttons = document.querySelectorAll('div.profile button');
-    const hidden = document.querySelectorAll('div[id~="HiddenFields"');
+    const hiddenElements = document.querySelectorAll('div[id$="HiddenFields"]');
     document.querySelector('main').addEventListener('click', onClick);
 
     function onClick(e){
-     
+
         if(e.target.tagName == 'INPUT' && e.target.type == 'radio'){
             for (const button of buttons){  
                 if (button.parentElement == e.target.parentElement){
-                    console.log(e.target.value)
                     if (e.target.value == 'unlock'){
                         button.addEventListener('click', showMore);
                     } else {
@@ -22,9 +21,16 @@ function lockedProfile() {
 
     function showMore(e){
         if (e.target.tagName =='BUTTON'){
-            for (el of hidden){
-                if (el.parentElement==e.target.parentElement){
-                    el.style.display == 'none' ? el.style.display == 'block' : el.style.display == 'none';
+            let btn = e.target;
+            for (let el of hiddenElements){
+                if (el.parentElement==btn.parentElement){
+                    if (btn.textContent == 'Show more'){
+                        btn.textContent = 'Hide it';
+                        el.style.display = 'block';
+                    } else {
+                        btn.textContent = 'Show more';
+                        el.style.display = 'none';
+                    }
                 }
             }
         }
