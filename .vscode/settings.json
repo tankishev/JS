@@ -33,5 +33,7 @@
           "args": ["-ExecutionPolicy", "Bypass"]
         }
       },
-      "terminal.integrated.defaultProfile.windows": "PowerShell"
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "livePreview.notifyOnOpenLooseFile": false,
+    "livePreview.openPreviewTarget": "External Browser",
 }

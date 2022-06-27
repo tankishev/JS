@@ -1,5 +1,5 @@
 function circleArea(radius){
-    if (isNaN(radius)){
+    if (typeof radius != 'number'){
         let inputType = typeof(radius)
         console.log(`We can not calculate the circle area, because we receive a ${inputType}.`);
     } else {

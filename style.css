@@ -26,7 +26,7 @@ th {
 
 thead tr:first-child {
     background: #ed1c40;
-    color: #fff;
+    color: rgb(255, 255, 255);
     border: none;
 }
 
