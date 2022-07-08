@@ -1,5 +1,6 @@
 function fromJSONToHTMLTable(inputJSON){
     const inputArray = JSON.parse(inputJSON);
+
     const headRow = (headersArray) => `<tr><th>${headersArray.map((str) => encodeURI(str)).join("</th><th>")}</th></tr>`;
     const dataRow = (dataArray) => `<tr><td>${dataArray.map((str) => encodeURI(str)).join("</td><td>")}</td></tr>`;
 

@@ -1,28 +1,13 @@
 function solve(num1, num2, operator){
-    let result = 0;
-    switch (operator){
-        case "+":
-            result = num1 + num2;    
-            break;
-        case "-":
-            result = num1 - num2;
-            break;
-        case "*":
-            result = num1 * num2;
-            break;
-        case "/":
-            num2 == 0 ? 0 : num1 / num2;
-            break;
-        case "%":
-            result = num1 % num2;
-            break;
-        case "**":
-            result = num1 ** num2;
-            break;
-        default:
-            break;
+    let calc = {
+        '+': (a, b) => a + b,
+        '-': (a, b) => a - b,
+        '*': (a, b) => a * b,
+        '/': (a, b) => a / b,
+        '%': (a, b) => a % b,
+        '**': (a, b) => a ** b
     }
-    console.log(result.toFixed(0))
+    console.log(calc[operator](num1, num2))
 }
 
 solve(5, 6, "+")
