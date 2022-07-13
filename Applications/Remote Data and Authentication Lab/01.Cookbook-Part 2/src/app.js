@@ -1,5 +1,4 @@
 window.addEventListener('load', async () => {
-
     const page = window.location.pathname.split('/').pop();
 
     if (page == 'index.html'){
@@ -10,50 +9,145 @@ window.addEventListener('load', async () => {
             guestNav.style.display = 'inline';
             userNav.style.display = 'none';
             document.querySelector('main p').textContent = 'Please log in to view the recepies';
-    
         } else {
             document.querySelector('main').innerHTML = '';
             guestNav.style.display = 'none';
             userNav.style.display = 'inline';
+            document.getElementById('logoutBtn').addEventListener('click', logOut);
             loadRecipes();
         }  
     } else if (page == 'register.html'){
         document.querySelector('form').addEventListener('click', registerSubmit);
+    } else if (page == 'login.html'){
+        document.querySelector('form').addEventListener('click', logIn);
+    } else if (page == 'create.html'){
+        document.querySelector('form').addEventListener('click', createNewRecipe);
     }
 });
+// Log-in / Log-out
+async function logIn(e){
+    e.preventDefault();
+    if (e.target.type == 'submit'){
+        const formData = new FormData(e.currentTarget);
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        if (!email || !password){
+            alert('Please enter email and password');
+        } else {
+            try {
+                const body = {email, password};
+                const url = 'http://localhost:3030/users/login';
+                const res = await fetch(url, genHeaders('post', false, body));
+                
+                if (!res.ok){
+                    let err =new Error(`${res.status} ${res.statusText}`);
+                    err.status = res.status;
+                    throw err;
+                }
+
+                const data = await res.json();
+                sessionStorage.setItem('accessToken', data.accessToken);
+                let address = window.location.href.split('/').slice(0, -1).join('/')
+                window.location.href = `${address}/index.html`;
+
+            } catch (error) {
+                if (error.status == 403){
+                    alert('Wrong username or password');
+                } else {
+                    console.log(error.message);
+                }
+            }
+        }
+    }
+}
+
+function logOut(){
+    sessionStorage.clear();
+    window.location.reload();
+}
 
 // Register related
 async function registerSubmit(e){
     e.preventDefault();
+    
     if (e.target.type == 'submit'){
+    
         const formData = new FormData(e.currentTarget);
+    
         if (formData.get('password') != formData.get('rePass')){
-            alert('Passwords must match. Try again.')
+    
+            alert('Passwords must match. Try again.');
+    
         } else if (formData.get('password') == '' || formData.get('email') == '' ){
-            alert('Email and password cannot be empty.')
+    
+            alert('Email and password cannot be empty.');
+    
         } else {
+    
             const body = {
                 email: formData.get('email'),
                 password: formData.get('password')
             }
+    
             try {
+    
                 url = 'http://localhost:3030/users/register'
                 const res = await fetch(url, genHeaders('post', useToken=false, body));
     
                 if (!res.ok){
-                    throw new Error(`${res.status} ${res.statusText}`)
+                    let err = new Error(`${res.status} ${res.statusText}`);
+                    err.status = res.status;
+                    throw err;
                 }
     
                 const data = await res.json();
                 sessionStorage.setItem('accessToken', data.accessToken);
-                console.log(data);
+                
+                let address = window.location.href.split('/').slice(0, -1).join('/')
+                window.location.href = `${address}/index.html`;
     
+            } catch (error) {
+                if (error.status == 409){
+                    alert('This user is already registered');
+                } else {
+                    console.log(error.message);
+                }
+            }
+        }
+    }
+}
+
+// Recipe related
+async function createNewRecipe(e){
+    e.preventDefault();
+    if (e.target.type == 'submit'){
+        const formData = new FormData(e.currentTarget);
+        const name = formData.get('name');
+        const img = formData.get('img');
+        const ingredients = formData.get('ingredients').split('\n');
+        const steps = formData.get('steps').split('\n');
+        
+        const body = {name, img, ingredients, steps}
+        if (!name || !img || !ingredients || !steps){
+            alert('Please fill all fields')
+        } else {
+            try {
+                url = 'http://localhost:3030/data/recipes';
+                const res = await fetch(url, genHeaders('post', true, body));
+                if (!res.ok){
+                    let err = new Error(`${res.status} ${res.statusText}`);
+                    err.status = res.status;
+                    throw err;
+                }
+                document.querySelector('form').reset();
             } catch (error) {
                 console.log(error.message);
             }
         }
     }
 }
+
 
 // Catalogue Related
 
