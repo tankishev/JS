@@ -1,6 +1,6 @@
 import { e } from '../utils.js';
 
-function movieDetails({img, title, description}){
+function movieDetails({img, title, description, likes}){
     const movie = e('div', {className: 'container'},
         e('div', {className: 'row bg-light text-dark'},
             e('h1', {}, `Movie title: ${title}`),
@@ -13,7 +13,7 @@ function movieDetails({img, title, description}){
                 e('a', {className: 'btn btn-danger', href: "#", id: 'btnDelete'}, 'Delete'),
                 e('a', {className: 'btn btn-warning', href: "#", id: 'btnEdit'}, 'Edit'),
                 e('a', {className: 'btn btn-primary', href: "#", id: 'btnLike'}, 'Like'),
-                e('span', {className: 'enrolled-span'}, 'Liked 1')
+                e('span', {className: 'enrolled-span'}, `Liked ${likes}`)
             )
         )
     );

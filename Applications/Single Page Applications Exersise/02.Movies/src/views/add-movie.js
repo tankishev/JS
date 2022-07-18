@@ -17,7 +17,6 @@ async function addMovie(e){
         if (Object.values(data).some(el => el == '')){
             throw new Error('Please fill all fields');
         } else {
-            console.log('here')    
             const url = 'http://localhost:3030/data/movies';
             const userData = JSON.parse(sessionStorage.getItem('userData'));
             data['_ownerId'] = userData._id;
