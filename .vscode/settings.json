@@ -26,6 +26,7 @@
             "no-undef": "error"
         }
     },
+    "emmet.includeLanguages": { "javascript": "html" },
     "terminal.integrated.profiles.windows": {
         "PowerShell": {
           "source": "PowerShell",
