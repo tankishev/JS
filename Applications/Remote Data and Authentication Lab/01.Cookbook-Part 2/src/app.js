@@ -1,3 +1,5 @@
+import { request } from './requests.js'
+
 window.addEventListener('load', async () => {
     const page = window.location.pathname.split('/').pop();
 
@@ -35,85 +37,36 @@ async function logIn(e){
         if (!email || !password){
             alert('Please enter email and password');
         } else {
-            try {
-                const body = {email, password};
-                const url = 'http://localhost:3030/users/login';
-                const res = await fetch(url, genHeaders('post', false, body));
-                
-                if (!res.ok){
-                    let err =new Error(`${res.status} ${res.statusText}`);
-                    err.status = res.status;
-                    throw err;
-                }
-
-                const data = await res.json();
-                sessionStorage.setItem('accessToken', data.accessToken);
-                let address = window.location.href.split('/').slice(0, -1).join('/')
-                window.location.href = `${address}/index.html`;
-
-            } catch (error) {
-                if (error.status == 403){
-                    alert('Wrong username or password');
-                } else {
-                    console.log(error.message);
-                }
-            }
+            const data = {email, password};
+            await request('login', {data})
+            let address = window.location.href.split('/').slice(0, -1).join('/')
+            window.location.href = `${address}/index.html`;
         }
     }
 }
 
-function logOut(){
-    sessionStorage.clear();
+async function logOut(){
+    await request('logout');
     window.location.reload();
 }
 
 // Register related
 async function registerSubmit(e){
     e.preventDefault();
-    
     if (e.target.type == 'submit'){
-    
         const formData = new FormData(e.currentTarget);
-    
         if (formData.get('password') != formData.get('rePass')){
-    
             alert('Passwords must match. Try again.');
-    
         } else if (formData.get('password') == '' || formData.get('email') == '' ){
-    
             alert('Email and password cannot be empty.');
-    
         } else {
-    
             const body = {
                 email: formData.get('email'),
                 password: formData.get('password')
             }
-    
-            try {
-    
-                url = 'http://localhost:3030/users/register'
-                const res = await fetch(url, genHeaders('post', useToken=false, body));
-    
-                if (!res.ok){
-                    let err = new Error(`${res.status} ${res.statusText}`);
-                    err.status = res.status;
-                    throw err;
-                }
-    
-                const data = await res.json();
-                sessionStorage.setItem('accessToken', data.accessToken);
-                
-                let address = window.location.href.split('/').slice(0, -1).join('/')
-                window.location.href = `${address}/index.html`;
-    
-            } catch (error) {
-                if (error.status == 409){
-                    alert('This user is already registered');
-                } else {
-                    console.log(error.message);
-                }
-            }
+            await response('register', {data: body})
+            let address = window.location.href.split('/').slice(0, -1).join('/')
+            window.location.href = `${address}/index.html`;
         }
     }
 }
@@ -132,18 +85,8 @@ async function createNewRecipe(e){
         if (!name || !img || !ingredients || !steps){
             alert('Please fill all fields')
         } else {
-            try {
-                url = 'http://localhost:3030/data/recipes';
-                const res = await fetch(url, genHeaders('post', true, body));
-                if (!res.ok){
-                    let err = new Error(`${res.status} ${res.statusText}`);
-                    err.status = res.status;
-                    throw err;
-                }
-                document.querySelector('form').reset();
-            } catch (error) {
-                console.log(error.message);
-            }
+            await request('addRecipe', {data: body})
+            document.querySelector('form').reset();
         }
     }
 }
@@ -159,19 +102,8 @@ async function loadRecipes(){
 }
 
 async function getRecipes() {
-    try {
-        const url = 'http://localhost:3030/data/recipes?select=_id%2Cname%2Cimg';
-        const res = await fetch(url, genHeaders());
-        
-        if (!res.ok){
-            throw new Error(`${res.status} ${res.statusText}`);
-        }
-    
-        const recipes = await res.json();
-        return recipes;      
-    } catch (error) {
-        console.log(error.message); 
-    }
+    const recipes = await request('getRecipes');
+    return recipes;      
 }
 
 function createRecipePreview(recipe) {
@@ -189,9 +121,7 @@ function createRecipePreview(recipe) {
 }
 
 async function getRecipeById(id) {
-    const url = `http://localhost:3030/data/recipes/${id}`
-    const response = await fetch(url, genHeaders());
-    const recipe = await response.json();
+    const recipe = await request('getRecipe', {_id: id})
     return recipe;
 }
 
@@ -216,20 +146,6 @@ function createRecipeCard(recipe) {
     async function toggleCard() {
         result.replaceWith(createRecipePreview(recipe));
     }
-}
-
-function genHeaders(method='get', useToken=false, body=null){
-    let header  = {
-        method,
-        headers: {'Content-Type': 'application/json'}
-    }
-    if (useToken){
-        header.headers['X-Authorization'] = sessionStorage.getItem('accessToken');
-    }
-    if (body){
-        header['body'] = JSON.stringify(body);
-    }
-    return header;
 }
 
 function e(type, attributes, ...content) {

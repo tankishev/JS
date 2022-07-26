@@ -1,3 +1,5 @@
+import { request } from './requests.js'
+
 let userLoggedIn = !(sessionStorage.getItem('user_id') == null);
 const main = document.querySelector('main');
 const views = document.getElementById('views');
@@ -8,7 +10,6 @@ const formRegister = document.querySelector('form#register');
 const formAddCatch = document.querySelector('form#addForm');
 const loadBtn = document.querySelector('button.load')
 const navBtns = document.querySelectorAll('nav a');
-
 
 // Load
 function onLoad(){
@@ -22,7 +23,7 @@ onLoad()
 // Assignment of Event Listeners
 function attachListeners(){
     formLogin.addEventListener('submit', logIn);
-    formRegister.addEventListener('submit', logIn);
+    formRegister.addEventListener('submit', register);
     formAddCatch.addEventListener('submit', addNewCatch);
     loadBtn.addEventListener('click', loadCatches);
     navBtns.forEach(btn => {
@@ -68,99 +69,86 @@ function navigate(tabName){
     }
 }
 
-// Registration for new user & login
-async function logIn(e){
+// Registration for new user
+async function register(e){
     e.preventDefault();
     const form = e.target;
-    const url = `http://localhost:3030/users/${form.id}`;
+    const formData = new FormData(form);
+    const values = Array.from(formData.values())
+    const data = Object.fromEntries(formData.entries())
     try {
-        const formData = new FormData(form);
-        if (form.id == 'register') {
-            if (formData.get('password') != formData.get('rePass')){
-                throw new Error('Passwords do not match');
-            }
+        if (values.some(v => v == '')){
+            throw new Error('All fields must be filled')
         }
-
-        const credentials = {email: formData.get('email'), password: formData.get('password')};
-        const res = await fetch(url, {
-            method: 'post',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(credentials)
-        });
-    
-        if (res.status != 200){
-            const data = await res.json();
-            throw new Error(`${data.code} ${data.message}`);
+        if (data.password != data.rePass){
+            throw new Error('Passwords do not match');
+        } 
+        delete data.rePass;
+        await request('register', {data})
+        if (sessionStorage.getItem('accessToken')){
+            userLoggedIn = true;
+            console.log('Successful registration');
+            navigate('home');   
         }
-    
-        const {accessToken, email, _id, ...rest} = await res.json();
-        sessionStorage.setItem('accessToken', accessToken);
-        sessionStorage.setItem('email', email);
-        sessionStorage.setItem('user_id',_id);
-        userLoggedIn = true;
-        console.log('Successful login');
-        navigate('home');
-        
     } catch (error) {
-        alert(error.message);
         console.log(error.message);
+        alert(error.message);
     } finally {
         form.reset()
     }
 }
 
+// login
+async function logIn(e){
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries())
 
-// Log-out of user
-async function logOut(){
     try {
-        const res = await fetch('http://localhost:3030/users/logout', {
-            method: 'get',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Authorization': sessionStorage.getItem('accessToken')
-            }
-        });
-        if (res.status == 204){
-            sessionStorage.clear();
-            userLoggedIn = false;
-            console.log('Successful logout');
-            navigate('home');
-        } else {
-            const data = await res.json();
-            throw new Error(`${data.code} ${data.message}`);
+        if (data.password == '' || data.email == ''){
+            throw new Error('Email and password cannot be empty')
+        }  
+        await request('login', {data});
+        if (sessionStorage.getItem('accessToken')){
+            userLoggedIn = true;
+            console.log('Successful login');
+            navigate('home');   
         }
     } catch (error) {
-        alert(error.message);
         console.log(error.message);
+        alert(error.message);
+    } finally {
+        form.reset()
     }
 }
 
+// Log-out of user
+async function logOut(){
+    await request('logout')
+    if (!sessionStorage.getItem('accessToken')){
+        userLoggedIn = false;
+        console.log('Successful logout');
+        navigate('home');
+    }
+}
 
 // Read catch data and list
 async function loadCatches(){
-    try {
-        const res = await fetch('http://localhost:3030/data/catches');
-               
-        if (res.status != 200){
-            const data = await res.json();
-            throw new Error(`${data.code} ${data.message}`);
-        }
-        
+    const data = await request('getAllCatches');      
+    if (data) {
         catchList.innerHTML = '';
         const textNode = main.firstChild;
         if (textNode.nodeName == '#text'){
             textNode.remove();
         }
         fieldsetMain.style.display = 'inline';
-
-        const data = await res.json();
+    
+        // const data = await res.json();
         data.forEach(el => {
             let div = addCatch(el);
             catchList.appendChild(div);
         })
-    } catch (error) {
-        alert(error.message);
-        console.log(error.message);
     }
 }
 
@@ -195,35 +183,23 @@ function addCatch(data){
 async function addNewCatch(e){
     e.preventDefault();
     if (userLoggedIn){
+        const form = e.target;
+        const formData = new FormData(form);
         try {
-            const form = e.target;
-            const url = `http://localhost:3030/data/catches`;
-            const formData = new FormData(form);
             if (Array.from(formData.values()).some(el => el == '')){
                 throw new Error ('Please fill all fields before posting');
             }
+
             const body = (Object.fromEntries(formData.entries()));
             body._ownerId = sessionStorage.getItem('user_id');
-            const res = await fetch(url, {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Authorization': sessionStorage.getItem('accessToken')
-                },
-                body: JSON.stringify(body)
-            });
-
-            if (res.status != 200){
-                const data = await res.json();
-                throw new Error(`${data.code} ${data.message}`);
-            }
-            const data = await res.json();
+            const data = await request('addCatch', {data: body});
             formAddCatch.reset();
 
             if (fieldsetMain.style.display == 'inline'){
                 const newCatch = addCatch(data);
                 catchList.appendChild(newCatch);
             }
+
         } catch (error) {
             alert(error.message);
             console.log(error.message);
@@ -235,39 +211,16 @@ async function addNewCatch(e){
 async function updateCatch(e){
     if (e.target.tagName == 'BUTTON' && userLoggedIn){
         try {
-            const id = e.target['data-id'];
+            const _id = e.target['data-id'];
             const type = e.target.className; 
             const card = e.currentTarget;
-            const url = `http://localhost:3030/data/catches/${id}`
             
             if (type == 'delete'){
-                const res = await fetch(url, {
-                    method: 'delete',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Authorization': sessionStorage.getItem('accessToken')
-                    }
-                });    
-                if (res.status != 200){
-                    const data = await res.json();
-                    throw new Error(`${data.code} ${data.message}`);
-                }
+                await request('deleteCatch', {_id});
                 card.remove();                
             } else if (type == 'update') {
-                
-                const body = Object.fromEntries(Array.from(card.querySelectorAll('input')).map(el => [el.className, el.value]));
-                const res = await fetch(url, {
-                    method: 'put',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Authorization': sessionStorage.getItem('accessToken')
-                    },
-                    body: JSON.stringify(body)
-                });    
-                if (res.status != 200){
-                    const data = await res.json();
-                    throw new Error(`${data.code} ${data.message}`);
-                }
+                const data = Object.fromEntries(Array.from(card.querySelectorAll('input')).map(el => [el.className, el.value]));
+                await request('updateCatch', {data, _id});
             }
         } catch (error) {
             alert(error.message);
